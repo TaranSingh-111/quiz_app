@@ -1,7 +1,6 @@
 package com.example.quizapp.ui
 
 import android.annotation.SuppressLint
-import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
 import android.util.Log
@@ -13,8 +12,6 @@ import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.example.quizapp.R
 import com.example.quizapp.model.Question
 import com.example.quizapp.utils.Constants
@@ -30,13 +27,15 @@ class QuestionsActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var option2: TextView
     private lateinit var option3: TextView
     private lateinit var option4: TextView
-
     private lateinit var checkButton: Button
 
     private lateinit var questionsList: MutableList<Question>
-    private val currentPosition = 1
+    private var currentQuestionNumber = 1
+    private lateinit var  currentQuestion: Question
+    private var selectedOption = 0
+    private var answered = false
 
-    private var selectedOptionPosition = 0
+    private var score = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,28 +66,48 @@ class QuestionsActivity : AppCompatActivity(), View.OnClickListener {
         setQuestion()
     }
 
+    //for setting up the question
     @SuppressLint("SetTextI18n")
     private fun setQuestion(){
-        val question = questionsList[currentPosition -1]
+        //removes the selection for the previous question
+        selectedOption = 0
+        //sets all the options to normal
+        resetOption()
+        //makes the question unanswered
+        answered = false
+
+        //setting the quesiton ui
+        val question = questionsList[currentQuestionNumber -1]
 
         questionTextView.text = question.question
         flagImage.setImageResource(question.image)
-        progressBar.progress = currentPosition
-        progressTextView.text = "$currentPosition/${progressBar.max}"
+        progressBar.progress = currentQuestionNumber
+        progressTextView.text = "$currentQuestionNumber/${progressBar.max}"
 
         option1.text = question.option1
         option2.text = question.option2
         option3.text = question.option3
         option4.text = question.option4
 
-        if(currentPosition == questionsList.size){
-            checkButton.text == "FINISH"
+        //making the options clickable
+        option1.isClickable = true
+        option2.isClickable = true
+        option3.isClickable = true
+        option4.isClickable = true
+
+        if(currentQuestionNumber < questionsList.size){
+            checkButton.text = "CHECK"
+            currentQuestion = question
         }else{
-            checkButton.text == "CHECK"
+            checkButton.text = "FINISH"
+            // TODO: final screen 
         }
 
+        //moves on to the next question when for the next method call
+        currentQuestionNumber++
     }
 
+    //changes the options textview to normal
     private fun resetOption(){
         val options = mutableListOf<TextView>()
 
@@ -107,11 +126,12 @@ class QuestionsActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
+    //calls resetOption to make all normal then changes the style of the selected option.
     @SuppressLint("ResourceAsColor")
     private fun selectOption(textView: TextView, selectedOptionNumber: Int){
         resetOption()
 
-        selectedOptionPosition = selectedOptionNumber
+        selectedOption = selectedOptionNumber
 
         textView.setTextColor(ContextCompat.getColor(
             this,
@@ -124,6 +144,97 @@ class QuestionsActivity : AppCompatActivity(), View.OnClickListener {
         )
     }
 
+    //checks the answer
+    //if correct makes it green
+    //else makes it red and makes the correct option green
+    private fun checkAnswer(){
+        answered = true
+
+        //make the options unclickable
+        option1.isClickable = false
+        option2.isClickable = false
+        option3.isClickable = false
+        option4.isClickable = false
+
+        if(currentQuestion.answer == selectedOption){
+            score++
+
+            when(selectedOption){
+                1 ->{
+                    option1.background = ContextCompat.getDrawable(
+                        this, R.drawable.correct_option_bg
+                    )
+                }
+                2 ->{
+                    option2.background = ContextCompat.getDrawable(
+                        this, R.drawable.correct_option_bg
+                    )
+                }
+                3 ->{
+                    option3.background = ContextCompat.getDrawable(
+                        this, R.drawable.correct_option_bg
+                    )
+                }
+                4 ->{
+                    option4.background = ContextCompat.getDrawable(
+                        this, R.drawable.correct_option_bg
+                    )
+                }
+            }
+        }else{
+            when(selectedOption){
+                1 ->{
+                    option1.background = ContextCompat.getDrawable(
+                        this, R.drawable.wrong_option_bg
+                    )
+                }
+                2 ->{
+                    option2.background = ContextCompat.getDrawable(
+                        this, R.drawable.wrong_option_bg
+                    )
+                }
+                3 ->{
+                    option3.background = ContextCompat.getDrawable(
+                        this, R.drawable.wrong_option_bg
+                    )
+                }
+                4 ->{
+                    option4.background = ContextCompat.getDrawable(
+                        this, R.drawable.wrong_option_bg
+                    )
+                }
+            }
+            //also show the correct option
+            showCorrectAnswer()
+        }
+    }
+
+    private fun showCorrectAnswer(){
+        when(currentQuestion.answer){
+            1 ->{
+                option1.background = ContextCompat.getDrawable(
+                    this, R.drawable.correct_option_bg
+                )
+            }
+            2 ->{
+                option2.background = ContextCompat.getDrawable(
+                    this, R.drawable.correct_option_bg
+                )
+            }
+            3 ->{
+                option3.background = ContextCompat.getDrawable(
+                    this, R.drawable.correct_option_bg
+                )
+            }
+            4 ->{
+                option4.background = ContextCompat.getDrawable(
+                    this, R.drawable.correct_option_bg
+                )
+            }
+        }
+    }
+
+    @SuppressLint("SetTextI18n")
     override fun onClick(view: View?) {
         when(view?.id){
             R.id.option1 -> {
@@ -137,6 +248,22 @@ class QuestionsActivity : AppCompatActivity(), View.OnClickListener {
             }
             R.id.option4 -> {
                 selectOption(option4, 4)
+            }
+            R.id.checkButton -> {
+                //if the question is answered move on to next question
+                if(answered){
+                    setQuestion()
+                } else{
+                    //only check if the option is selected
+                    if(selectedOption != 0){
+                        //if unanswered checks the answer and makes the button say next
+                        //checkAnswer makes sure that if condition is executed next
+                        checkAnswer()
+                        if(currentQuestionNumber < questionsList.size){
+                            checkButton.text = "NEXT"
+                        }
+                    }
+                }
             }
         }
     }
