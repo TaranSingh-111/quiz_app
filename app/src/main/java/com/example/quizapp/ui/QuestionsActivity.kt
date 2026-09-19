@@ -1,6 +1,7 @@
 package com.example.quizapp.ui
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.graphics.Typeface
 import android.os.Bundle
 import android.util.Log
@@ -36,6 +37,7 @@ class QuestionsActivity : AppCompatActivity(), View.OnClickListener {
     private var answered = false
 
     private var score = 0
+    private lateinit var name: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,44 +65,61 @@ class QuestionsActivity : AppCompatActivity(), View.OnClickListener {
         questionsList = Constants.getQuestions()
         Log.d("QuestionSize", "${questionsList.size}")
 
+        if(intent.hasExtra(Constants.USER_NAME)){
+            name = intent.getStringExtra(Constants.USER_NAME)!!
+        }
         setQuestion()
+
     }
 
     //for setting up the question
     @SuppressLint("SetTextI18n")
     private fun setQuestion(){
-        //removes the selection for the previous question
-        selectedOption = 0
-        //sets all the options to normal
-        resetOption()
-        //makes the question unanswered
-        answered = false
+        if(currentQuestionNumber <= questionsList.size){
+            //removes the selection for the previous question
+            selectedOption = 0
+            //sets all the options to normal
+            resetOption()
+            //makes the question unanswered
+            answered = false
 
-        //setting the quesiton ui
-        val question = questionsList[currentQuestionNumber -1]
+            //setting the quesiton uiT
+            val question = questionsList[currentQuestionNumber -1]
 
-        questionTextView.text = question.question
-        flagImage.setImageResource(question.image)
-        progressBar.progress = currentQuestionNumber
-        progressTextView.text = "$currentQuestionNumber/${progressBar.max}"
+            questionTextView.text = question.question
+            flagImage.setImageResource(question.image)
+            progressBar.progress = currentQuestionNumber
+            progressTextView.text = "$currentQuestionNumber/${progressBar.max}"
 
-        option1.text = question.option1
-        option2.text = question.option2
-        option3.text = question.option3
-        option4.text = question.option4
+            option1.text = question.option1
+            option2.text = question.option2
+            option3.text = question.option3
+            option4.text = question.option4
 
-        //making the options clickable
-        option1.isClickable = true
-        option2.isClickable = true
-        option3.isClickable = true
-        option4.isClickable = true
+            //making the options clickable
+            option1.isClickable = true
+            option2.isClickable = true
+            option3.isClickable = true
+            option4.isClickable = true
 
-        if(currentQuestionNumber < questionsList.size){
             checkButton.text = "CHECK"
             currentQuestion = question
+
+            println("step debug")
+            println(name)
+            println(questionsList.size)
+            println(score)
         }else{
-            checkButton.text = "FINISH"
-            // TODO: final screen 
+            Intent(this, ResultsActivity::class.java).also{
+                println("final debug")
+                println(name)
+                println(questionsList.size)
+                println(score)
+                it.putExtra(Constants.USER_NAME, name)
+                it.putExtra(Constants.TOTAL_QUESTIONS, questionsList.size)
+                it.putExtra(Constants.SCORE, score)
+                startActivity(it)
+            }
         }
 
         //moves on to the next question when for the next method call
@@ -259,8 +278,11 @@ class QuestionsActivity : AppCompatActivity(), View.OnClickListener {
                         //if unanswered checks the answer and makes the button say next
                         //checkAnswer makes sure that if condition is executed next
                         checkAnswer()
-                        if(currentQuestionNumber < questionsList.size){
+                        if(currentQuestionNumber <= questionsList.size){
                             checkButton.text = "NEXT"
+                        }
+                        else{
+                            checkButton.text = "FINISH"
                         }
                     }
                 }

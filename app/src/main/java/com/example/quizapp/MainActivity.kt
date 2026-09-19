@@ -8,11 +8,11 @@ import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.example.quizapp.ui.QuestionsActivity
+import com.example.quizapp.utils.Constants
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContentView(R.layout.activity_main)
 
         val startButton : Button = findViewById(R.id.start_button)
@@ -21,6 +21,7 @@ class MainActivity : AppCompatActivity() {
         startButton.setOnClickListener {
             if(editTextName.text.isNotEmpty()){
                 Intent(this@MainActivity, QuestionsActivity::class.java).also{
+                    it.putExtra(Constants.USER_NAME, editTextName.text.toString())
                     startActivity(it)
                     finish()
                 }
